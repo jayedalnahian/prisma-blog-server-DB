@@ -11,6 +11,8 @@ const getPost = async (req: Request, res: Response) => {
             data: result
         })
     } catch (error: any) {
+        console.log(error);
+        
         res.status(500).json({
             success: false,
             message: "server error",
@@ -24,8 +26,16 @@ const getPost = async (req: Request, res: Response) => {
 const createPost = async (req: Request, res: Response) => {
     try {
 
+        if (!req.user) {
+            return res.status(500).json({
+                success: false,
+                message: "Unauthorized",
+               
+            })
+        }
 
-        const result = await postService.createPost(req.body)
+
+        const result = await postService.createPost(req.body, req.user?.id as string)
         res.status(201).json({
             success: true,
             message: "post created successfully",
