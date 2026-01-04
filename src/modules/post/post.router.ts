@@ -9,6 +9,6 @@ const { auth } = authMiddleware;
 
 
 router.post("/", auth(UserRole.ADMIN), postController.createPost)
-router.get('/', auth(UserRole.ADMIN), postController.getPost)
+router.get('/', postController.getPost)
 
 export const postRouter = router;

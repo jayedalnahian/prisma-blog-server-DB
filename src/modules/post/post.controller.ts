@@ -1,10 +1,25 @@
 import { Request, Response } from "express"
 import { postService } from "./post.service";
+import { PostStatus } from "../../../generated/prisma/enums";
+
 
 const getPost = async (req: Request, res: Response) => {
     try {
-
-        const result = await postService.getPost()
+        const query = req.query
+      
+        const tags = query.tags ? (query.tags as string).split(",") : [];
+        const searchString = typeof query.search === "string" ? query.search : undefined;
+        const isFeatured = query.isFeatured
+            ? query.isFeatured === "true"
+                ? true
+                : query.isFeatured === "false"
+                    ? false
+                    : undefined
+            : undefined;
+        
+        const status = query.status as PostStatus
+        const authorId = query.authorId as string
+        const result = await postService.getPost({ search: searchString, tags, isFeatured, status, authorId })
         res.status(200).json({
             success: true,
             message: "data retrived successfully",
@@ -12,7 +27,7 @@ const getPost = async (req: Request, res: Response) => {
         })
     } catch (error: any) {
         console.log(error);
-        
+
         res.status(500).json({
             success: false,
             message: "server error",
@@ -30,7 +45,7 @@ const createPost = async (req: Request, res: Response) => {
             return res.status(500).json({
                 success: false,
                 message: "Unauthorized",
-               
+
             })
         }
 
