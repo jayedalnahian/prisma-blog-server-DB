@@ -2,6 +2,7 @@ import { Post } from "../../../generated/prisma/client";
 import { PostWhereInput } from "../../../generated/prisma/models";
 import { prisma } from "../../lib/prisma";
 import { PostStatus } from '../../../generated/prisma/enums';
+import { IOptionsResult } from "../../helpters/paginationSortingHelper";
 
 const createPost = async (
     data: Omit<Post, "id" | "createdAt" | "updatedAt" | "authorId">,
@@ -17,7 +18,9 @@ const getPost = async ({ search,
     tags,
     isFeatured,
     status,
-    authorId
+    authorId,
+    options,
+    userData
 }
     : {
         search: string | undefined,
@@ -25,6 +28,14 @@ const getPost = async ({ search,
         isFeatured: boolean | undefined,
         status: PostStatus | undefined,
         authorId: string | undefined
+        options: IOptionsResult,
+        userData: null | {
+            id: string;
+            email: string;
+            name: string;
+            role: string;
+            emailVerified: boolean;
+        }
     }) => {
 
 
@@ -71,18 +82,49 @@ const getPost = async ({ search,
         })
     }
 
+
     if (authorId) {
         andCondition.push({
             authorId
         })
     }
 
+
+    const skip = (options.page - 1) * options.limit
+
     const result = await prisma.post.findMany({
+        take: options.limit,
+        skip,
+        orderBy: options.sortBy && options.sortOrder ? {
+            [options.sortBy]: options.sortOrder
+        } : {
+            createdAt: 'desc'
+        },
         where: {
             AND: andCondition
         }
     })
-    return result
+
+    const coutnt = await prisma.post.count({
+        where: {
+            AND: andCondition
+        }
+    })
+    return {
+        data: result,
+        metaData: {
+            pagination: {
+                totalData: coutnt,
+                pageNo: options.page,
+                limit: options.limit,
+                skip: options.skip,
+                totalPages: Math.ceil(coutnt / options.limit),
+                sortBy: options.sortBy,
+                sortOrder: options.sortOrder
+            }
+        },
+        userData: userData
+    }
 }
 
 
