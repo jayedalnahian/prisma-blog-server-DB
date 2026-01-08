@@ -42,9 +42,9 @@ const auth = (...roles: UserRole[]) => {
                 })
             }
 
-            console.log("session ===>", session, { user: req.user });
+         
 
-            console.log("valid role ===> ", roles.includes(req.user.role as UserRole));
+            
             next()
         } catch (error) {
             console.log(error);
